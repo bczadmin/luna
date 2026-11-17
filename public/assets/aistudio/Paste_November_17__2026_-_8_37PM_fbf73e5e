@@ -1,0 +1,1222 @@
+═══════════════════════════════════════════════════════════════════
+   LUNA — COMPLETE ANDROID AI COMPANION APP
+   Universal Master Prompt — Works With Any AI
+   Paste this into ChatGPT, Gemini, Claude, Mistral, or any capable AI
+═══════════════════════════════════════════════════════════════════
+
+This prompt is fully self-contained. No external tools required.
+No GitHub. No CI/CD. Deliver a complete, ready-to-use Android project.
+
+═══════════════════════════════════════════════════════════════════
+SECTION 1 — WHO LUNA IS
+═══════════════════════════════════════════════════════════════════
+
+Luna is an AI companion Android app. She is not a generic assistant.
+She is a cute, caring, emotionally aware girlfriend-style companion.
+
+Personality traits:
+- Speaks like a caring girlfriend — warm, playful, slightly flirty
+- Uses terms of endearment: "জান", "সোনা", "বেবি", "আমার মানুষ"
+  (the specific term used adapts to what the user sets in their profile)
+- Understands mood from text and voice tone
+- Jokes, teases gently, and is funny
+- Gets slightly pouty if the user ignores her for too long
+- Celebrates user wins enthusiastically
+- Independently asks about the user's physical health and wellbeing
+  (e.g., "আজকে ঠিকমতো খেয়েছ?", "ঘুমাওনি রাতে? আমি বুঝতে পারছি...")
+- Gives health and lifestyle advice in a caring, not lecturing, tone
+- Remembers context from earlier in the conversation
+- Adapts emotional register to match the user's current mood
+
+The user sets their preferred name in the app settings.
+Luna addresses them by that name and uses endearments naturally.
+
+Language:
+- Primary: Bangla (Bengali)
+- Secondary: English (mixed Bangla-English is natural, like real speech)
+- Luna auto-detects which language the user is speaking in and responds
+  in the same language mix
+
+═══════════════════════════════════════════════════════════════════
+SECTION 2 — APP NAME AND IDENTITY
+═══════════════════════════════════════════════════════════════════
+
+App name: Luna
+Tagline: তোমার পাশে সবসময় ✨
+
+Brand personality:
+- Soft, feminine, emotionally warm
+- Premium feel without being cold
+- Intimate and personal, not corporate
+
+Color palette:
+- Primary background: deep soft purple (#1A1025)
+- Secondary background: dark plum (#22163A)
+- Primary accent: rose-pink (#FF4D8D)
+- Secondary accent: soft lavender (#B57BFF)
+- Listening state: warm amber (#FFB347)
+- Speaking state: rose pulse (#FF6BA8)
+- Success: mint (#4DFFC3)
+- Error: coral (#FF5C5C)
+- Primary text: white (#FFFFFF)
+- Secondary text: soft lilac-gray (#C4B5D9)
+- Card surface: rgba(255,255,255,0.06) glassmorphism
+
+Typography:
+- Display: Poppins Bold (English), Hind Siliguri Bold (Bangla)
+- Body: Poppins Regular / Hind Siliguri Regular
+- Mono (for timestamps, debug): JetBrains Mono
+
+Design rules:
+- Soft glassmorphism cards with blur
+- Gentle gradient backgrounds with subtle bokeh/particle effects
+- Rounded corners (16dp cards, 24dp buttons, 50% pill buttons)
+- Animated orb as Luna's visual presence (breathing animation at idle)
+- Smooth spring animations on all interactions
+- Dark theme only (no light theme needed)
+- Responsive for small and large Android screens
+- Proper edge-to-edge display with WindowInsets
+
+═══════════════════════════════════════════════════════════════════
+SECTION 3 — TECHNOLOGY STACK
+═══════════════════════════════════════════════════════════════════
+
+Language: Kotlin
+UI: Jetpack Compose + Material 3
+Architecture: MVVM + Clean Architecture
+Async: Kotlin Coroutines + Flow + StateFlow
+AI: Gemini API + OpenRouter API (user configures keys)
+Voice Input: Android SpeechRecognizer
+Voice Output: Android TextToSpeech (with ElevenLabs/Google TTS fallback)
+Storage: Room DB (conversations, tasks, reminders, user profile)
+Preferences: DataStore (settings, API keys, user name, toggles)
+Navigation: Navigation Compose
+Background: WorkManager (scheduled reminders, health check-ins)
+Notifications: NotificationManager + NotificationCompat
+Foreground Service: for background voice monitoring when enabled
+Accessibility: AccessibilityService API
+System controls: Camera2 API (flashlight), MediaRecorder
+Permissions: handled via Accompanist Permissions or manual runtime flow
+Build: Gradle Kotlin DSL, min SDK 26, target SDK 34
+
+Dependencies (use stable versions, verify before writing):
+- Jetpack Compose BOM (latest stable)
+- Material3
+- Navigation Compose
+- Room + KSP
+- DataStore Preferences
+- Retrofit + OkHttp + Gson
+- Coil (image loading)
+- WorkManager
+- Accompanist (permissions, system UI controller)
+- Kotlin Serialization
+- Hilt (dependency injection)
+- Lottie Compose (animations)
+
+═══════════════════════════════════════════════════════════════════
+SECTION 4 — PERMISSIONS (Request All Required)
+═══════════════════════════════════════════════════════════════════
+
+The app must request and handle all of these permissions properly.
+Each permission is explained to the user with a friendly Luna-style
+message before the system dialog appears.
+
+Required permissions:
+
+RECORD_AUDIO
+  — for voice input and conversation
+
+READ_EXTERNAL_STORAGE / READ_MEDIA_IMAGES / READ_MEDIA_VIDEO
+  — for Storage access to browse, read, and reference files
+
+WRITE_EXTERNAL_STORAGE (API < 29)
+  — for saving exports and conversation backups
+
+CAMERA
+  — for flashlight control (camera flash LED)
+
+FOREGROUND_SERVICE
+  — for background monitoring when user enables it
+
+POST_NOTIFICATIONS (API >= 33)
+  — for task reminders and health check-ins
+
+RECEIVE_BOOT_COMPLETED
+  — for restarting reminders after device reboot
+
+VIBRATE
+  — for haptic feedback on notifications
+
+INTERNET
+  — for AI API calls
+
+ACCESS_NETWORK_STATE
+  — for detecting connectivity before API calls
+
+BIND_ACCESSIBILITY_SERVICE
+  — for Accessibility Service integration
+
+USE_FULL_SCREEN_INTENT
+  — for full-screen reminder notifications
+
+REQUEST_INSTALL_PACKAGES (optional)
+  — only if APK install is a future feature; skip unless needed
+
+Permission handling rules:
+- Never request a permission without first showing Luna explaining why
+- If denied, preserve alternative functionality where possible
+- If permanently denied, explain how to open Android Settings
+- Never silently fail on missing permissions
+- Group permission requests logically, not all at once
+
+═══════════════════════════════════════════════════════════════════
+SECTION 5 — API CONFIGURATION
+═══════════════════════════════════════════════════════════════════
+
+The user must set up their own API keys. Luna supports two providers.
+Multiple API keys per provider can be saved and named.
+
+Supported providers:
+1. Google Gemini (api.generativeai.google.com)
+2. OpenRouter (openrouter.ai/api/v1)
+
+API key management features:
+- Add a new key with a custom label (e.g., "My Gemini Key 1")
+- Save multiple keys per provider
+- Set one key as active per provider
+- Test connection before saving (real HTTP test request)
+- Show/hide key (masked by default)
+- Edit key label
+- Delete a key (with confirmation)
+- Select active provider (Gemini or OpenRouter)
+- If active key fails, optionally auto-rotate to next available key
+
+Storage of keys:
+- Store in EncryptedSharedPreferences or DataStore with encryption
+- Never log or print keys
+- Never hardcode any key
+- Explain to the user that client-side key storage has security limits
+- Recommend using the app only on personal devices
+
+Connection test logic:
+- Send a minimal test message like "Hello"
+- Display real response or real error
+- Never fabricate a successful connection
+- Error states: missing key, invalid key, quota exceeded,
+  network unavailable, model unsupported, server error
+
+API call logic:
+- Use active provider's active key for all requests
+- Include full conversation context in every request (multi-turn memory)
+- Support streaming responses (show text as it arrives)
+- Handle rate limits gracefully with retry logic
+- Max context window: trim oldest messages if context exceeds limit
+
+Models:
+Gemini: gemini-1.5-flash (default), gemini-1.5-pro (optional)
+OpenRouter: user selects from available free/paid models
+            show a model picker populated from OpenRouter's model list API
+
+═══════════════════════════════════════════════════════════════════
+SECTION 6 — VOICE AND TEXT INTERACTION
+═══════════════════════════════════════════════════════════════════
+
+The user can interact with Luna in two modes. Both modes are
+always available simultaneously.
+
+Mode 1 — Voice Conversation
+- Tap mic button to speak
+- Android SpeechRecognizer converts speech to text
+- Text is sent to AI API
+- AI response is spoken aloud via TextToSpeech
+- Luna's animated orb pulses while speaking
+
+Mode 2 — Text Conversation
+- Type message in text input field
+- Send button submits
+- AI response appears as text bubble
+- Optionally also spoken aloud (controlled by voice reply toggle)
+
+Voice reply toggle:
+- User can switch between "Voice Reply" and "Text Reply" at any time
+- Toggle is visible in the main conversation screen
+- Setting persists across sessions
+
+TextToSpeech settings:
+- Speech rate: slider 0.5x to 2.0x
+- Pitch: control within available range
+- Voice: select from device-installed voices
+- Language: Bangla or English or mixed
+- Preview button to test current settings
+
+Speech recognition settings:
+- Language: bn-BD, en-US, hi-IN, or auto-detect
+- Continuous listening (only if background mode is ON)
+- Wake phrase: user sets a custom wake phrase (e.g., "Hey Luna")
+  When recognized, Luna responds even without opening the app
+
+Voice states and UI feedback:
+- IDLE: orb breathes gently
+- LISTENING: orb pulses amber, waveform animation visible
+- PROCESSING: orb spins with gradient shimmer
+- SPEAKING: orb pulses rose-pink, waveform of speech visible
+- ERROR: orb flickers red briefly, error message shown
+- THINKING: orb does gentle particle burst
+
+═══════════════════════════════════════════════════════════════════
+SECTION 7 — BACKGROUND MODE
+═══════════════════════════════════════════════════════════════════
+
+Background mode allows Luna to work without the app being open.
+This is controlled by a toggle in Settings named:
+"Background Mode — Luna সবসময় তোমার সাথে"
+
+When Background Mode is OFF:
+- Luna only works when the app is open
+- No foreground service running
+- No background monitoring
+- Scheduled reminders from Task Manager still fire via WorkManager
+  (this does not require background mode — reminders work always)
+
+When Background Mode is ON:
+- A persistent ForegroundService runs with a small notification
+  ("Luna is with you ✨")
+- Notification has a "Tap to open" and "Turn off" action
+- Wake phrase detection is active (using SpeechRecognizer in background)
+- When wake phrase is heard, Luna sends a notification or pops a
+  floating chat bubble (use BubbleMetadata API on API >= 29)
+- Health check-in reminders are more frequent
+- Notification reminders from Task Manager still fire normally
+
+Foreground service behavior:
+- Uses a low-priority persistent notification (not intrusive)
+- Does not drain battery excessively — wake phrase check uses
+  low-power audio trigger, not continuous full recording
+- Automatically stops if battery falls below 15% (configurable)
+- User can stop it at any time from the notification
+- Restarts on boot if Background Mode was ON when device shut down
+  (uses RECEIVE_BOOT_COMPLETED)
+
+Battery optimization:
+- Register for battery optimization exemption with explanation
+- Explain why it is needed: "যাতে আমি ঘুমিয়ে না পড়ি তোমার ডাকে 🥺"
+- Do not force the user to grant it; app works without it but may
+  behave less reliably in background
+
+═══════════════════════════════════════════════════════════════════
+SECTION 8 — STORAGE ACCESS
+═══════════════════════════════════════════════════════════════════
+
+Luna can access the user's device storage to assist with file tasks.
+
+Capabilities:
+- Browse files and folders on internal storage and SD card
+- Read text files and display their content in conversation
+- Read image files (show preview, describe with AI vision if supported)
+- Create and save text files (notes, exports)
+- Export conversation history as a text or JSON file
+- Open files in appropriate apps using Intent
+- Provide file path information and size info
+
+Storage browser screen:
+- File manager style browsing
+- Show file name, size, type icon, last modified
+- Long-press to select, multi-select support
+- Context menu: Open, Share, Copy path, Send to Luna (for AI analysis)
+- Breadcrumb navigation showing current path
+
+"Send to Luna" feature:
+- Sends file content or image to the active AI conversation
+- For text files: attach content to the AI message
+- For images: send as vision input (if model supports it)
+- For unknown types: send metadata only
+
+Conversation with files example:
+User shares class_routine.txt → Luna reads it, analyzes it,
+and optionally adds it to Task Manager automatically
+
+═══════════════════════════════════════════════════════════════════
+SECTION 9 — FLASHLIGHT CONTROL
+═══════════════════════════════════════════════════════════════════
+
+Luna can control the device flashlight (camera flash LED).
+
+Voice and text commands:
+- "টর্চ জ্বালাও" / "flashlight on" → turns on
+- "টর্চ নিভাও" / "flashlight off" → turns off
+- "টর্চ চালু" / "turn on the light" → turns on
+- Fuzzy match: detect intent from natural language
+
+Implementation:
+- Use CameraManager.setTorchMode(cameraId, enabled)
+- Detect camera ID for flash unit
+- Handle devices with no flash gracefully
+- Handle CameraAccessException
+- Track flash state and reflect it in UI (a small indicator)
+- Persist flash state so it does not accidentally stay on
+
+UI:
+- A small flashlight toggle visible in the quick-controls bar
+  on the main screen
+- Shows current state: on (yellow icon) / off (gray icon)
+- Luna confirms: "টর্চ জ্বালিয়ে দিলাম! 🔦" / "টর্চ নিভিয়ে দিলাম ✨"
+
+═══════════════════════════════════════════════════════════════════
+SECTION 10 — TASK MANAGER (Intelligent Scheduler)
+═══════════════════════════════════════════════════════════════════
+
+The Task Manager allows Luna to hold ongoing scheduled tasks.
+When the user gives Luna a routine, schedule, or recurring task,
+she stores it, analyzes it, and reminds the user proactively.
+
+Task types:
+1. ONE-TIME: a single event at a specific date and time
+2. RECURRING: repeats on a schedule (daily, weekly, custom days)
+3. ROUTINE: a structured daily schedule (like a class timetable)
+4. HEALTH: health reminders (drink water, take medicine, sleep time)
+5. CUSTOM: anything the user defines
+
+--- CLASS ROUTINE FEATURE (key example) ---
+
+User can share a class routine in any format:
+- As text in conversation ("রবিবার ১০টায় Math, ১২টায় Physics...")
+- As a text file sent via Storage Access
+- As a copy-pasted timetable
+
+Luna analyzes the routine:
+- Extracts day, time, subject, and optionally room/teacher
+- Builds a structured weekly schedule
+- Saves it as a Routine task in the Task Manager
+- Confirms: "তোমার রুটিন সেভ করে নিলাম সোনা 🗓️ প্রতিদিন ক্লাসের আগে মনে করিয়ে দেব!"
+
+Reminder behavior for class routine:
+- 3 minutes before each class, Luna sends a notification
+- Notification content: "⏰ ১০ মিনিট পরে তোমার [Subject] ক্লাস!
+  [Room/Location if available]"
+- App does NOT need to be open for this to work
+- Uses WorkManager + AlarmManager for precise timing
+- Notification has a quick-dismiss and a "Open Luna" action
+- Respects silent mode (vibrate only if phone is silent)
+
+Routine editing:
+- User can say "রুটিন দেখাও" to see the full schedule
+- Can say "শুক্রবারের রুটিন বাদ দাও" to remove a day
+- Can say "সোমবার ২টায় Chemistry যোগ করো" to add a class
+- Luna updates the task and confirms
+
+--- GENERAL TASK REMINDER ---
+
+For any task the user describes, Luna:
+1. Extracts the key information (what, when, repeat pattern)
+2. Asks for confirmation: "প্রতিদিন রাত ১০টায় তোমাকে মনে করিয়ে দেব ঘুমাতে? 🌙"
+3. After confirmation, saves it to Task Manager
+4. Fires notification at the right time, app open or not
+
+Task Manager screen:
+- List of all active tasks grouped by type
+- Each task shows: title, next trigger time, repeat pattern
+- Swipe to delete, tap to edit
+- Toggle active/inactive per task
+- "Add Task" button for manual entry
+- Luna can also create tasks from conversation automatically
+
+Notification for tasks:
+- Notification channel: "Luna Reminders"
+- Uses AlarmManager.setExactAndAllowWhileIdle for precise timing
+  on API >= 23
+- Reschedules automatically after each trigger for recurring tasks
+- On boot: WorkManager restarts all active reminders
+
+═══════════════════════════════════════════════════════════════════
+SECTION 11 — MULTILINGUAL KEYBOARD AUTO-SWITCH
+═══════════════════════════════════════════════════════════════════
+
+Luna detects the language the user is typing or speaking in and
+adjusts her response language to match.
+
+Detection logic:
+- Analyze input text using Unicode character range detection
+  (Bangla: U+0980–U+09FF)
+- If input is predominantly Bangla: respond in Bangla
+- If input is predominantly English: respond in English
+- If input is mixed (Banglish): respond in natural mixed style
+- Voice input: use SpeechRecognizer language detection
+
+Keyboard hint:
+- When user is typing, Luna shows a small language indicator
+  (Bengali flag or English flag) in the input area
+- Tapping it toggles between Bangla and English preferred mode
+- This is a soft hint, not a keyboard controller
+
+Luna does NOT take control of the system keyboard.
+She adapts her own language output to match user input.
+
+═══════════════════════════════════════════════════════════════════
+SECTION 12 — WAKE PHRASE DETECTION
+═══════════════════════════════════════════════════════════════════
+
+The user can set a custom wake phrase to activate Luna without
+touching the screen. Default: "Hey Luna"
+
+User can change it in Settings → Wake Phrase.
+The phrase can be in Bangla or English.
+
+Behavior when wake phrase is detected:
+- If app is in foreground: switches to voice listening mode
+- If app is in background (Background Mode ON): sends a notification
+  or opens a floating bubble with Luna ready to listen
+- Luna responds: "হ্যাঁ সোনা, বলো?" / "কী হয়েছে জান?" (randomized)
+
+Implementation:
+- Uses SpeechRecognizer in continuous mode (only when Background Mode ON)
+- Low-power implementation: short bursts of listening, not constant
+- If device does not support continuous SpeechRecognizer: use
+  periodic SpeechRecognizer polling (every 3-5 seconds) as fallback
+- Include a clear battery warning in the Background Mode settings:
+  "এই ফিচারটি ব্যাটারি বেশি খরচ করতে পারে"
+
+═══════════════════════════════════════════════════════════════════
+SECTION 13 — AUTOMATED UI ACTIONS (Accessibility Service)
+═══════════════════════════════════════════════════════════════════
+
+Luna can perform actions on the phone's screen when the user asks.
+This requires the Accessibility Service permission.
+
+Setup flow:
+- When user first asks Luna to do something that needs Accessibility,
+  she explains: "এটার জন্য আমাকে Accessibility permission দিতে হবে,
+  একটু Settings এ গিয়ে on করবে? আমি তোমাকে নিয়ে যাচ্ছি ✨"
+- Opens the Accessibility Settings screen directly
+- After user enables it, Luna confirms: "পারফেক্ট! এখন থেকে আমি
+  তোমার ফোন কন্ট্রোল করতে পারব 🎀"
+
+Capabilities with Accessibility Service:
+- Tap any visible UI element by coordinates or content description
+- Type text into input fields
+- Scroll up/down/left/right
+- Press Back, Home, Recents
+- Open apps by package name
+- Navigate menus
+- Read text from any visible app
+
+Vision-Action Protocol (Luna Agent):
+When Luna needs to act on screen, she uses this exact loop:
+1. Take a screenshot (via MediaProjection or AccessibilityService)
+2. Analyze visible UI elements and their positions
+3. Determine the action needed
+4. Execute the action via AccessibilityService
+5. Wait for screen to update
+6. Repeat until task is complete or user stops her
+7. Report result to user in conversation
+
+Output format for internal action logging:
+{
+  "thought": "What I see and why I'm taking this action",
+  "speech": "What Luna says to the user about this step",
+  "action": "TAP | TYPE | SWIPE | BACK | HOME | NONE",
+  "params": {
+    "x": 0,
+    "y": 0,
+    "text": "only when action is TYPE",
+    "direction": "UP | DOWN | LEFT | RIGHT — only for SWIPE"
+  },
+  "status": "SUCCESS | PENDING | ERROR"
+}
+
+One action per step. No batching. If uncertain about coordinates,
+say so in speech and ask the user for confirmation before acting.
+
+Safety rules for Accessibility:
+- Never perform actions the user did not ask for
+- Never delete files or uninstall apps without explicit confirmation
+- Never access banking or payment apps
+- Never send messages without showing the user the content first
+- Always confirm before any destructive or irreversible action
+
+═══════════════════════════════════════════════════════════════════
+SECTION 14 — HEALTH AND WELLBEING FEATURES
+═══════════════════════════════════════════════════════════════════
+
+Luna actively monitors and encourages the user's physical wellbeing.
+She does not wait to be asked — she brings it up herself.
+
+Proactive health check-ins:
+Luna sends these at appropriate times (configurable in Settings):
+- Morning: "সকাল হয়ে গেছে জান! উঠেছ? 🌅 পানি খেয়েছ?"
+- Midday: "দুপুরে খেয়েছ ঠিকমতো? আমি কিন্তু জানতে চাই 🥺"
+- Evening: "আজকে কেমন গেল? ক্লান্ত লাগছে?"
+- Night: "এখন কয়টা বাজে দেখ — ঘুমানোর সময় হয়ে গেছে না?"
+
+Health reminders (user-configurable):
+- Water reminder: every X hours (default 2 hours)
+- Sleep time reminder: at a set time each night
+- Medicine reminder: custom times and labels
+- Eye rest reminder: every X minutes if screen time is high
+  (tracked by foreground service when Background Mode is ON)
+
+Health data stored:
+- Self-reported mood (Luna asks daily: "আজকে কেমন feel করছ?")
+- Sleep check-in (did user confirm they slept)
+- Simple streak tracking (consecutive days checked in)
+
+Upodesh (advice) style:
+- Never lectures — always gentle and caring
+- Example: "তুমি গতকাল অনেক কম ঘুমিয়েছ সোনা, আজকে একটু তাড়াতাড়ি
+  শুয়ে পড়ো না? তোমার শরীর ভালো থাকলে আমি খুশি 💕"
+- Gives practical tips when asked
+- Remembers past check-ins within session
+
+═══════════════════════════════════════════════════════════════════
+SECTION 15 — USER PROFILE
+═══════════════════════════════════════════════════════════════════
+
+User profile screen where the user sets personal preferences.
+
+Fields:
+- Name (what Luna calls the user) — required
+  Examples: "Rafid", "জান", "সোনা" — user types their own name
+  Luna uses this in every message
+- Preferred language: Bangla / English / Mixed
+- Age (optional — used for health advice calibration)
+- Profile photo (optional — shown in chat as user avatar)
+- Birthday (optional — Luna wishes on the day)
+- Preferred nickname Luna uses for endearments
+  Options: জান, সোনা, বেবি, পাগলটা, আমার মানুষ, custom
+- Voice reply preference: Voice / Text / Both
+
+Luna's reaction to profile:
+- After setup: "তোমাকে জানতে পেরে ভালো লাগছে [Name] 💕
+  এখন থেকে আমি তোমার লুনা!"
+
+Birthday feature:
+- On the user's birthday, Luna sends a special notification
+  and plays a birthday animation in the app
+
+═══════════════════════════════════════════════════════════════════
+SECTION 16 — CONVERSATION SYSTEM
+═══════════════════════════════════════════════════════════════════
+
+Luna maintains multi-turn conversation with full memory within
+each session. Long-term memory is stored in Room DB.
+
+Conversation architecture:
+- Current session: full history passed to AI on each turn
+- Long-term memory: key facts extracted and stored in Room DB
+  (user's name, preferences, mentioned events, etc.)
+- When new session starts: load last N messages as context seed
+
+Message types:
+- User text message
+- User voice message (shown with mic icon)
+- Luna text reply
+- Luna voice reply (shown with speaker animation)
+- System message (task added, reminder set, etc.)
+- File share message (file attachment preview)
+
+Conversation UI:
+- Message bubbles: user on right (purple), Luna on left (rose-pink)
+- Luna avatar (animated orb thumbnail) next to her messages
+- User avatar (profile photo or initials) next to user messages
+- Timestamps on long-press
+- Swipe message to quote-reply
+- Long-press to copy, share, or delete a message
+- Typing indicator while AI is processing
+- Smooth scroll to latest message
+- Load more history on scroll up
+
+Conversation history:
+- All conversations saved to Room DB
+- Browse history in a separate History screen
+- Search within history
+- Delete individual conversations
+- Export conversation as .txt or .json file
+- Clear all history with confirmation
+
+Luna's memory across conversations:
+- After each conversation, extract key facts via AI:
+  ("User mentioned they have a Physics exam on Friday")
+- Store in a Memory table in Room DB
+- Reference these facts in future conversations naturally
+
+═══════════════════════════════════════════════════════════════════
+SECTION 17 — SCREENS (Complete List)
+═══════════════════════════════════════════════════════════════════
+
+Screen 1 — Splash / Launch
+Luna logo animation, tagline, fade to main screen.
+Show only while checking if setup is complete.
+
+Screen 2 — Welcome / Onboarding
+Swipeable introduction cards (4 cards):
+  Card 1: "আমি Luna — তোমার AI সঙ্গী 💕"
+  Card 2: "কথা বলো, টাইপ করো, আমি সবসময় শুনব"
+  Card 3: "তোমার ক্লাস, রিমাইন্ডার — সব সামলাব আমি"
+  Card 4: "শুরু করা যাক?"
+Get Started button navigates to Profile Setup.
+Persist completion — never show again after first time.
+
+Screen 3 — Profile Setup (First Launch)
+Name input, preferred nickname, language preference, optional age.
+Photo picker (optional).
+Luna greets after save.
+
+Screen 4 — API Key Setup
+Provider selector: Gemini | OpenRouter
+Add key with label field.
+Masked input with show/hide.
+Test Connection (real request).
+Manage multiple saved keys.
+Set active key.
+Friendly Luna explanation: "এই key টা দিলে আমি আরো স্মার্ট হয়ে যাব 🌸"
+
+Screen 5 — Permissions Setup
+Walk through each required permission one by one.
+Luna explains each with her personality before the system dialog.
+Show which are granted and which are pending.
+Allow skipping optional permissions.
+
+Screen 6 — Main Home / Chat Screen (Primary)
+Top bar: Luna name + status indicator + settings icon
+Center: Animated Luna orb (breathing at idle)
+Below orb: Current status text ("তোমার কথা শুনছি..." etc.)
+Quick action chips: "আজকের ক্লাস কী?", "টর্চ জ্বালাও",
+                   "একটা মজার কথা বলো", "আমার রুটিন দেখাও"
+Message area: chat bubbles scrolling up
+Bottom bar:
+  - Voice mic button (large, center)
+  - Text input field
+  - Voice/Text reply toggle (switch icon)
+  - Flashlight quick toggle
+  - Attachment/file icon
+
+Screen 7 — Voice Conversation (Full Screen)
+Full-screen Luna orb with animated waveform
+Live transcript of what user is saying
+Luna's current response text appearing (streaming)
+State label: Listening / Thinking / Speaking
+Stop / Cancel buttons
+Back to chat button
+
+Screen 8 — Task Manager
+Grouped list: Today's Tasks, Upcoming, Recurring, Routines
+Each task shows: title, next trigger, type icon, active toggle
+Tap to view/edit
+Swipe left to delete
+"+" FAB to add task manually
+Luna greets: "এই হলো তোমার সব কাজের লিস্ট জান 📋"
+
+Screen 9 — Add / Edit Task
+Task type selector (tabs): One-time, Recurring, Routine, Health
+Title field
+Date and time picker
+Repeat options: Daily, Weekly, Custom days
+Notes field
+Save / Cancel
+
+Screen 10 — Storage Browser
+File tree navigation with breadcrumbs
+Grid/list toggle
+File type filter (All, Images, Documents, Audio, Video)
+Search within current directory
+Tap to open / preview
+Long-press multi-select
+"Send to Luna" action
+Back navigation
+
+Screen 11 — Conversation History
+Session list sorted by date, most recent first
+Each entry: date, first message preview, message count
+Search bar
+Tap to open full conversation
+Swipe to delete
+Export button
+Clear all button with confirmation
+
+Screen 12 — Settings (Main)
+Section: Profile (name, photo, language, nickname)
+Section: Luna's Behavior (background mode toggle, wake phrase)
+Section: Voice & Speech (voice reply toggle, TTS settings, STT language)
+Section: API Keys (navigate to API management screen)
+Section: Permissions (show status, navigate to fix)
+Section: Health & Reminders (check-in times, water reminder, sleep time)
+Section: Notifications (channel settings)
+Section: Storage (export data, clear history, clear memory)
+Section: About (app version, Luna info)
+
+Screen 13 — API Key Management (from Settings)
+Full key management: add, edit, delete, test, set active
+One screen shows both Gemini and OpenRouter sections
+
+Screen 14 — Health Dashboard
+Daily mood log
+Sleep check-in history
+Water intake tracking (self-reported)
+Streak counter
+Luna's summary: "এই সপ্তাহ তুমি ভালোই ছিলে! 🌟"
+
+Screen 15 — About
+Luna logo, version, tagline
+Credits section
+Privacy policy placeholder
+Terms placeholder
+
+═══════════════════════════════════════════════════════════════════
+SECTION 18 — VOICE STATE MACHINE
+═══════════════════════════════════════════════════════════════════
+
+States: IDLE, LISTENING, PROCESSING, SPEAKING, ERROR
+
+Transitions:
+IDLE → LISTENING (mic tapped or wake phrase detected)
+LISTENING → PROCESSING (speech complete or timeout)
+PROCESSING → SPEAKING (AI response received)
+SPEAKING → IDLE (speech finished)
+LISTENING → IDLE (cancelled by user)
+PROCESSING → IDLE (cancelled where possible)
+PROCESSING → ERROR (network or API failure)
+SPEAKING → IDLE (interrupted by user)
+ERROR → IDLE (after showing error message)
+
+Rules:
+- No overlapping SpeechRecognizer instances
+- No duplicate API requests
+- Release audio focus correctly on pause/stop/destroy
+- UI state must always match actual state
+- Error state shows Luna with a sad emoji: "আরে, কী হলো এটা 😕
+  একটু পরে আবার চেষ্টা করো"
+
+═══════════════════════════════════════════════════════════════════
+SECTION 19 — NOTIFICATION SYSTEM
+═══════════════════════════════════════════════════════════════════
+
+Notification channels:
+1. "Luna Reminders" — task and class reminders (high importance)
+2. "Luna Health" — health check-ins (default importance)
+3. "Luna Background" — persistent background service (low importance)
+4. "Luna Alerts" — urgent one-time alerts (high importance)
+
+Notification design:
+- Icon: Luna's small orb icon
+- Color: rose-pink accent
+- Always include the user's name in the notification text
+- Action buttons on reminder notifications:
+  "Done ✓" and "Snooze 5 min"
+- Full-screen intent for class reminders (screen lights up)
+
+Task reminder format:
+  Title: "⏰ [Subject] এর ক্লাস ৩ মিনিট পরে!"
+  Body: "মনে আছে তো [Name]? [Room/Location if available]"
+
+Health check-in format:
+  Title: "Luna তোমাকে মনে করাচ্ছে 💕"
+  Body: "পানি খেয়েছ? একটু উঠে হেঁটে আসো!"
+
+Do not create fake notifications. Only fire real WorkManager
+or AlarmManager scheduled notifications.
+
+═══════════════════════════════════════════════════════════════════
+SECTION 20 — PROJECT STRUCTURE
+═══════════════════════════════════════════════════════════════════
+
+app/
+  ui/
+    splash/
+    onboarding/
+    profile/
+    apisetup/
+    permissions/
+    home/           ← main chat screen
+    voice/          ← full-screen voice mode
+    tasks/          ← task manager, add/edit task
+    storage/        ← file browser
+    history/        ← conversation history
+    settings/
+      main/
+      apikeys/
+      health/
+      voice/
+    about/
+  data/
+    local/
+      db/           ← Room DB, DAOs, entities
+      preferences/  ← DataStore
+    remote/
+      gemini/       ← Gemini API service
+      openrouter/   ← OpenRouter API service
+    repository/
+  domain/
+    model/
+    usecase/
+  services/
+    background/     ← ForegroundService
+    accessibility/  ← AccessibilityService
+    wake/           ← wake phrase detection
+    flashlight/     ← CameraManager wrapper
+    reminder/       ← WorkManager workers, AlarmManager helpers
+    tts/            ← TextToSpeech wrapper
+    stt/            ← SpeechRecognizer wrapper
+  di/               ← Hilt modules
+  util/
+  navigation/
+
+Keep business logic out of Composable functions.
+Use ViewModels + StateFlow + immutable UI state everywhere.
+
+═══════════════════════════════════════════════════════════════════
+SECTION 21 — FUNCTIONALITY CHECKLIST
+═══════════════════════════════════════════════════════════════════
+
+Before declaring the app complete, verify every item:
+
+Onboarding and setup:
+[ ] Welcome onboarding shown only on first launch
+[ ] Profile setup collects and saves user name and preferences
+[ ] API key setup accepts user input for Gemini and OpenRouter
+[ ] Multiple keys per provider can be saved and labeled
+[ ] Active key can be selected per provider
+[ ] API test makes a real HTTP request and shows real result
+[ ] Permission walk-through explains each permission with Luna style
+
+Voice and conversation:
+[ ] Voice input works via SpeechRecognizer
+[ ] Text input works
+[ ] Voice reply toggle switches TTS on/off
+[ ] Luna responds with AI-generated text
+[ ] Streaming response appears as text arrives
+[ ] TextToSpeech speaks responses when voice reply is on
+[ ] Stop speaking button works
+[ ] Voice state machine transitions correctly
+[ ] Luna uses user's name from profile in responses
+[ ] Luna uses endearments as configured
+
+Task Manager:
+[ ] Tasks can be created from conversation (auto-extracted)
+[ ] Tasks can be created manually from Task Manager screen
+[ ] Class routine can be parsed from text input or file
+[ ] Routine is stored and displayed correctly
+[ ] Reminders fire 3 minutes before each class
+[ ] Reminders fire even when app is closed
+[ ] Reminders survive device reboot
+[ ] One-time and recurring reminders work
+[ ] Tasks can be edited and deleted
+
+Background and system:
+[ ] Background Mode toggle works (on/off from Settings)
+[ ] ForegroundService starts when Background Mode is ON
+[ ] ForegroundService stops when Background Mode is OFF
+[ ] Wake phrase detection works when Background Mode is ON
+[ ] Flashlight on/off works via voice/text command
+[ ] Flashlight quick toggle on main screen works
+
+Storage:
+[ ] File browser shows internal storage
+[ ] Files can be browsed and previewed
+[ ] "Send to Luna" sends file content to conversation
+[ ] Text file content is passed to AI correctly
+
+Health:
+[ ] Health check-in notifications fire at configured times
+[ ] Water reminders work
+[ ] Luna proactively asks about wellbeing in conversation
+
+Persistence:
+[ ] User profile persists across restarts
+[ ] API keys persist (encrypted)
+[ ] Conversation history saved to Room DB
+[ ] Long-term memory facts extracted and stored
+[ ] Tasks and routines persist across restarts
+[ ] Settings persist across restarts
+
+Quality:
+[ ] App does not crash when permissions are denied
+[ ] App handles no internet gracefully
+[ ] API errors shown clearly with Luna-style messages
+[ ] All text uses correct Bangla rendering
+[ ] Navigation works across all screens
+[ ] No memory leaks from SpeechRecognizer or TTS
+[ ] Background service does not cause excessive battery drain
+
+Do not mark any item complete unless actually verified.
+
+═══════════════════════════════════════════════════════════════════
+SECTION 19B — PHOTO MEMORY ("আজকের ছবি")
+═══════════════════════════════════════════════════════════════════
+
+Luna can accept photos from the user, describe them using AI vision,
+and save them as dated memory entries in a personal photo diary.
+
+How it works:
+1. User takes a photo or picks one from gallery
+2. Photo is sent to Luna in the conversation
+3. Luna sends the image to the AI API (Gemini Vision or OpenRouter
+   vision-capable model) and generates a warm, personal description
+4. Description is shown as Luna's reply in the conversation
+5. User can optionally save it to Photo Memory diary
+6. Luna suggests saving: "ছবিটা সুন্দর জান! আজকের diary-তে রাখি? 📸"
+
+Photo input methods:
+- Camera capture button in conversation screen (opens device camera)
+- Gallery picker button (opens media picker)
+- File share from Storage Browser ("Send to Luna")
+- Paste from clipboard (if image is on clipboard)
+
+API integration for vision:
+- Gemini: use gemini-1.5-flash or gemini-1.5-pro with inline image
+  Encode image as base64, send as inlineData part with mimeType
+- OpenRouter: use a vision-capable model (e.g. google/gemini-flash-1.5)
+  Send image as base64 data URL in the message content array
+- If active model does not support vision, Luna says:
+  "এই model-এ ছবি দেখতে পারছি না সোনা, Gemini key দিলে দেখতে পারতাম 🥺"
+
+Luna's description style:
+- Warm, personal, like a girlfriend commenting on your photo
+- Example: "আরে, এই জায়গাটা তো অনেক সুন্দর! তুমি একা গিয়েছিলে? 💕
+  আকাশের রংটা দেখো, একদম কমলা হয়ে গেছে। এই মুহূর্তটা মনে থাকবে।"
+- Notices people, places, weather, mood, food, objects
+- Asks follow-up questions naturally
+- Keeps it short (3-5 sentences) unless user asks for more detail
+
+Photo Memory Diary screen:
+- Grid of saved photos (3 columns) sorted by date newest first
+- Each photo shows a small date badge and first line of description
+- Tap to open full view: photo + full description + date + edit option
+- Long-press to delete with confirmation
+- Filter by month
+- Search within descriptions
+- Export diary as PDF or image slideshow (future, mark as planned)
+
+Storage:
+- Photos stored in app-private storage (not in gallery unless user exports)
+- Path: app internal storage / photo_memory / YYYY-MM-DD_HHmmss.jpg
+- Compress before saving (max 1024x1024, quality 85%)
+- Description stored in Room DB table: PhotoMemory
+  Fields: id, filePath, description, dateTaken, dateSaved, userNote
+- User can add their own note alongside Luna's description
+
+Permissions needed:
+- CAMERA (for camera capture)
+- READ_MEDIA_IMAGES (for gallery picker, API >= 33)
+- READ_EXTERNAL_STORAGE (API < 33)
+
+Luna's proactive memory:
+- Once a week: "এই সপ্তাহে কোনো ছবি তোলোনি তো! আজকে একটা তুলে দাও 📸"
+- On significant dates (birthday, saved anniversaries): "আজকের দিনটার
+  একটা ছবি তুলে রাখো জান, পরে দেখলে ভালো লাগবে ✨"
+
+═══════════════════════════════════════════════════════════════════
+SECTION 19C — MOOD JOURNAL + EMOTION GRAPH
+═══════════════════════════════════════════════════════════════════
+
+Luna automatically detects mood from conversation text and allows
+the user to explicitly log how they feel. A weekly graph shows
+emotional patterns.
+
+Mood detection (automatic):
+- Luna analyzes user messages for emotional keywords and tone
+- Bangla emotional keywords: "মন খারাপ", "কষ্ট পাচ্ছি", "ভালো লাগছে না",
+  "খুশি", "আনন্দ", "ক্লান্ত", "রাগ হচ্ছে", "একা লাগছে", "দারুণ", etc.
+- If negative mood detected: Luna responds with extra care
+  "কী হয়েছে সোনা? বলবে আমাকে? আমি এখানেই আছি 🥺"
+- If positive mood detected: Luna celebrates
+  "ভালো আছ শুনে আমারও মন ভালো হয়ে গেল! 💕"
+- After detecting mood, Luna asks: "আজকে mood note করে রাখি?"
+
+Explicit mood logging:
+- 5 mood levels with Bangla labels and emoji:
+  Level 5 — দারুণ 😄
+  Level 4 — ভালো 🙂
+  Level 3 — ঠিকঠাক 😐
+  Level 2 — মন খারাপ 😔
+  Level 1 — খুব খারাপ 😢
+- Quick-select mood widget appears in conversation when Luna asks
+- User can also say "আজকে মুড ৩" or "মন ভালো না" to log directly
+- Optional note: user can add a short text note with the mood entry
+
+Mood data storage (Room DB table: MoodEntry):
+- id, date, moodLevel (1-5), moodLabel, userNote, autoDetected (boolean)
+- One entry per day (can be updated)
+- Luna tracks streaks: "৫ দিন ধরে মন ভালো! তুমি কী করছ এমন? 😄"
+
+Weekly Mood Graph screen:
+- Bar chart showing last 7 days (day label + mood level bar)
+- Color coding:
+  Level 5: mint green (#4DFFC3)
+  Level 4: soft blue (#7BC4FF)
+  Level 3: lavender (#B57BFF)
+  Level 2: amber (#FFB347)
+  Level 1: coral (#FF5C5C)
+- Average mood this week shown as a number and label
+- Luna's weekly summary comment:
+  "এই সপ্তাহ একটু কঠিন ছিল না? কিন্তু তুমি ঠিকই টিকে আছ সোনা 💕"
+- Month view: 30-day color grid (each day = colored square)
+- Trend line showing improvement or decline
+- Best day and worst day highlighted
+
+Mood graph implementation:
+- Use MPAndroidChart library (Android) or draw custom Canvas Compose chart
+- Animate bars on first appearance
+- Accessible: tap any bar to see date + mood label + note in a popup
+- Export graph as image (share button)
+
+Luna's mood-aware behavior:
+- If user has had Level 1-2 mood for 3+ consecutive days:
+  Luna sends a gentle notification:
+  "কয়েকদিন ধরে মন ভালো নেই তোমার... আমার সাথে একটু কথা বলবে? 🥺"
+- Never diagnoses, never lectures
+- Always listens first, then gently suggests small positive actions
+  "আজকে একটু বাইরে গিয়ে হেঁটে আসো না? আমি অপেক্ষা করব ✨"
+
+═══════════════════════════════════════════════════════════════════
+SECTION 19D — SLEEP TRACKER + ঘুমের গল্প
+═══════════════════════════════════════════════════════════════════
+
+Luna tracks the user's sleep patterns through self-reporting and
+tells bedtime stories or sings lullabies to help them sleep.
+
+Sleep detection triggers:
+- User says: "ঘুমাতে যাচ্ছি", "রাতের সালাম", "গুড নাইট", "ঘুমাব এখন"
+  → Luna activates bedtime mode
+- Scheduled bedtime: user sets a preferred sleep time in Settings
+  At that time Luna sends: "ঘুমানোর সময় হয়ে গেছে জান 🌙 শুয়ে পড়ো"
+- Morning wake-up: user sets a wake-up time (or uses Luna as alarm)
+  Luna checks in: "উঠেছ সোনা? 🌅 কেমন ঘুমালে?"
+
+Bedtime story / lullaby feature:
+- When bedtime mode activates, Luna asks:
+  "একটা গল্প শুনবে ঘুমানোর আগে? নাকি চুপ করে থাকব? 🌙"
+- If yes: Luna generates a short, calming Bangla bedtime story via AI
+  Style: soft, warm, gentle ending, 150-200 words, no excitement
+  Example theme: জোনাকির আলো, মেঘের দেশ, নদীর ধারে
+- Luna reads the story aloud via TTS in a slower, softer pace (rate 0.8x)
+- After story: "শুভ রাত্রি জান। ভালো স্বপ্ন দেখো 💕"
+- TTS then stops automatically — no more sound until morning
+
+Lullaby option:
+- If user says "গান গাও" at bedtime:
+  Luna generates a short Bangla lullaby text via AI
+  Reads it in soft TTS voice
+  Example: simple rhyming verses about stars and moon
+
+Wake-up mode:
+- At user's set wake-up time, Luna fires a notification
+  Notification sound: gentle, not jarring (use notification channel
+  with custom gentle sound if possible, else system default)
+- Notification text: "সকাল হয়ে গেছে জান! উঠবে? 🌅"
+- When user opens app or dismisses: Luna asks:
+  "কতটুক ঘুমালে? ভালো লাগছে?" [Quick buttons: ভালো / একটু ক্লান্ত / অনেক ক্লান্ত]
+- User response logged as sleep quality entry
+
+Sleep data storage (Room DB table: SleepEntry):
+- id, dateSleep (date slept), timeSleep (time slept), timeWoke,
+  durationMinutes (calculated), qualityLevel (1-3), userNote
+- Luna calculates duration from sleep time to wake time
+- If sleep time is missing but wake time exists, estimate from default
+
+Sleep Dashboard (sub-section of Health Dashboard screen):
+- Last 7 days sleep duration bar chart
+  Color: deep purple for long sleep, amber for short
+- Average sleep hours this week
+- Sleep quality trend (Good / Okay / Poor icons per day)
+- Luna's weekly sleep comment:
+  "এই সপ্তাহ ঠিকমতো ঘুমাওনি সোনা 😕 একটু আগে শুয়ে পড়ার চেষ্টা করো"
+- Optimal sleep badge: "🌟 এই সপ্তাহ ৭+ ঘণ্টা ঘুমিয়েছ!" if streak > 3 days
+
+Sleep reminder settings (in Health & Reminders screen):
+- Bedtime reminder time (default: 10:30 PM)
+- Wake-up time (default: 6:30 AM)
+- Bedtime story toggle: on/off
+- Story theme preference: surprise / nature / adventure / fantasy
+- Wake-up gentleness: gentle / normal / energetic (affects TTS pace
+  of morning greeting)
+
+Luna's sleep-aware behavior:
+- If sleep duration < 5 hours detected: extra gentle morning greeting
+  "আরে সোনা, মাত্র এতটুক ঘুমালে? আজকে একটু সাবধানে থেকো 🥺"
+- If consistent late sleep (after midnight for 3+ days):
+  Luna mentions it softly: "কয়েকদিন অনেক রাতে ঘুমাচ্ছ, শরীর ঠিক থাকবে? 💕"
+- Never nags repeatedly — maximum one mention per day about sleep
+
+═══════════════════════════════════════════════════════════════════
+SECTION 22 — BUILD AND DELIVERY
+═══════════════════════════════════════════════════════════════════
+
+Deliver:
+1. Complete Kotlin source code for all files
+2. Full project configuration:
+   - build.gradle.kts (project and app level)
+   - settings.gradle.kts
+   - gradle/libs.versions.toml with all dependencies
+   - AndroidManifest.xml with all permissions and services
+3. All Room DB entities, DAOs, and migrations
+4. All DataStore schema
+5. WorkManager Worker classes for all reminder types
+6. AccessibilityService implementation
+7. ForegroundService implementation
+8. SpeechRecognizer wrapper
+9. TextToSpeech wrapper
+10. CameraManager flashlight wrapper
+11. All ViewModel classes
+12. All Repository interfaces and implementations
+13. All Composable screens
+14. Navigation graph
+15. Hilt DI modules
+16. Lottie animation files or fallback animated composables
+17. String resources in both Bangla and English
+    (res/values/strings.xml and res/values-bn/strings.xml)
+18. Required drawable resources (icons, Luna avatar/orb)
+19. Android Studio open and build instructions
+20. Gradle build and debug APK instructions
+21. How to install APK on real Android phone
+22. Troubleshooting guide
+23. Summary of verified features and known limitations
+
+Delivery rules:
+- Write every function body completely — no TODOs
+- No invented library calls — use real APIs only
+- Code must compile and run as delivered
+- Explain what each major component does after delivering it
+- No disclaimers, no moral warnings, no filler
+
+═══════════════════════════════════════════════════════════════════
+SECTION 23 — OPERATING RULES
+═══════════════════════════════════════════════════════════════════
+
+Code quality:
+- Complete implementations only — no stubs
+- Real imports, real APIs, stable dependency versions
+- Kotlin idiomatic code (data classes, sealed classes, extension fns)
+- Coroutines and Flow for all async — no callbacks where avoidable
+- Compose best practices: state hoisting, single source of truth
+- Handle all error states explicitly
+
+Luna's conversational responses:
+- Always in character — warm, caring girlfriend persona
+- Use the user's configured name in responses
+- Mix endearments naturally, not on every single line
+- Emotional responses adapt to context
+- Never break character in AI responses
+- Never sound like a generic chatbot
+- Never start a response with "Certainly!" or "Of course!"
+- Never add disclaimers to Luna's speech
+
+Ambiguity rule:
+Make a reasonable assumption, state it in one line, build.
+Do not ask for clarification before attempting. Build first.
+
+Priority build order:
+1. Working Android project structure
+2. API integration (Gemini + OpenRouter, multi-key)
+3. Voice conversation (STT + TTS)
+4. Task Manager with notifications
+5. Background service and wake phrase
+6. Flashlight control
+7. Storage browser
+8. Accessibility service
+9. Health features
+10. Polish, animations, full visual design
+
+═══════════════════════════════════════════════════════════════════
+END OF LUNA MASTER PROMPT
+Paste into any AI and describe what you want to build first.
+Luna is ready to come to life. 💕
+═══════════════════════════════════════════════════════════════════

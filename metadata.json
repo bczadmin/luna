@@ -1,0 +1,6 @@
+{
+  "name": "Luna — AI Companion",
+  "description": "তোমার পাশে সবসময় — Bilingual Bangla & English emotionally aware AI companion with voice, class routine scheduler, mood journal, sleep stories, photo memory, and exportable Android Kotlin source project.",
+  "requestFramePermissions": ["microphone", "camera"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
